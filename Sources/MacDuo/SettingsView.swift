@@ -10,6 +10,7 @@ struct SettingsView: View {
     @State private var hasScreenPermission = CGPreflightScreenCaptureAccess()
     @State private var settingsOpenFailed = false
 
+    var onHideStatusItem: () -> Void
     var onQuit: () -> Void
 
     private static let width: CGFloat = 300
@@ -158,6 +159,8 @@ struct SettingsView: View {
                 .onChange(of: launchesAtLogin) { _, newValue in
                     setLaunchAtLogin(newValue)
                 }
+            Button("隐藏菜单栏图标", action: onHideStatusItem)
+                .controlSize(.small)
             HStack {
                 Button("恢复默认设置") { preferences.resetToDefaults() }
                 Spacer()

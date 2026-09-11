@@ -19,9 +19,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         super.init()
 
         if let button = statusItem.button {
-            button.image = Bundle.main.url(forResource: "MenuBarIcon", withExtension: "png")
-                .flatMap(NSImage.init(contentsOf:))
-            button.image?.size = NSSize(width: 18, height: 18)
+            button.image = Self.menuBarImage()
             button.image?.accessibilityDescription = "Mac Duo"
             button.imagePosition = .imageLeading
             button.target = self
@@ -36,6 +34,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
             rootView: SettingsView(
                 preferences: preferences,
                 controller: controller,
+                onHideStatusItem: { [weak self] in self?.hide() },
                 onQuit: { NSApp.terminate(nil) }
             )
         )
@@ -57,6 +56,15 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         if let barWindowMoved {
             NotificationCenter.default.removeObserver(barWindowMoved)
         }
+    }
+
+    func show() {
+        statusItem.isVisible = true
+    }
+
+    private func hide() {
+        popover.performClose(nil)
+        statusItem.isVisible = false
     }
 
     @objc private func togglePopover(_ sender: Any?) {
@@ -106,5 +114,22 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         } else if !button.title.isEmpty {
             button.title = ""
         }
+    }
+
+    private static func menuBarImage() -> NSImage? {
+        guard let url = Bundle.main.url(forResource: "MenuBarIcon", withExtension: "png"),
+              let source = NSImage(contentsOf: url) else { return nil }
+
+        let size = NSSize(width: 18, height: 18)
+        let image = NSImage(size: size, flipped: false) { rect in
+            NSGraphicsContext.saveGraphicsState()
+            NSGraphicsContext.current?.imageInterpolation = .high
+            NSBezierPath(roundedRect: rect, xRadius: 4, yRadius: 4).addClip()
+            source.draw(in: rect, from: .zero, operation: .sourceOver, fraction: 1)
+            NSGraphicsContext.restoreGraphicsState()
+            return true
+        }
+        image.isTemplate = false
+        return image
     }
 }
